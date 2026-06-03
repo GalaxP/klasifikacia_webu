@@ -5,14 +5,26 @@ description = ""
 authors = [
     {name = "GalaxP",email = "galaxik10@gmail.com"}
 ]
-requires-python = "<3.12,>=3.10"
+requires-python = "<3.12,>=3.11"
 dependencies = [
+    "lightgbm (>=4.6.0,<5.0.0)",
+    "pandas (>=3.0.3,<4.0.0)",
+    "numpy (>=2.4.6,<3.0.0)",
+    "scikit-learn (>=1.9.0,<2.0.0)",
+    "beautifulsoup4 (>=4.14.3,<5.0.0)",
+    "lxml (>=6.1.1,<7.0.0)",
+    "python-levenshtein (>=0.27.3,<0.28.0)",
+    "nltk (>=3.9.4,<4.0.0)",
+    "gensim (>=4.4.0,<5.0.0)",
+    "spacy (>=3.8.14,<4.0.0)",
     "ipykernel (>=7.2.0,<8.0.0)",
-    "pycaret (>=3.3.2,<4.0.0)",
-    "pandas-stubs (>=2.1.4,<2.2.0)",
-    "pyarrow (>=24.0.0,<25.0.0)"
+    "pandas-stubs (>=3.0.3,<3.1.0)",
+    "scipy-stubs (>=1.17.1,<1.18.0)",
+    "stanza (>=1.12.1,<2.0.0)"
 ]
 
+[tool.poetry]
+package-mode = false
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
