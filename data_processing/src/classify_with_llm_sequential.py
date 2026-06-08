@@ -7,8 +7,10 @@ Přidán parametr --max-rows pro limitování počtu zpracovaných záznamů (de
 """
 
 import argparse
+import html
 import json
 import os
+import re
 import sys
 import time
 from typing import Optional
@@ -81,6 +83,11 @@ Content:
 Output exactly one JSON object in this format:
 {{"categories": ["CATEGORY1"], "note": "", "needs_human_review": false, "czech": true}}"""
 
+HTML_BLOCK_RE = re.compile(r"<(script|style|noscript)\b.*?</\1>", re.IGNORECASE | re.DOTALL)
+HTML_TAG_RE = re.compile(r"<[^>]+>")
+DEFAULT_MAX_INPUT_CHARS = 12000
+ABSOLUTE_MAX_INPUT_CHARS = 20000
+
 
 
 
@@ -106,12 +113,38 @@ def parse_json_from_response(text: str) -> Optional[dict]:
     return None
 
 
+def prepare_text_for_prompt(text: str, max_chars: int) -> str:
+    """Zmenší HTML na čitelný text a ořízne ho na bezpečnú dĺžku."""
+    if not text:
+        return ""
+
+    cleaned = HTML_BLOCK_RE.sub(" ", text)
+    cleaned = HTML_TAG_RE.sub(" ", cleaned)
+    cleaned = html.unescape(cleaned)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+
+    if max_chars > 0 and len(cleaned) > max_chars:
+        head = max_chars * 4 // 5
+        tail = max_chars - head
+        cleaned = cleaned[:head].rstrip() + "\n...[TRUNCATED]...\n" + cleaned[-tail:].lstrip()
+
+    return cleaned
+
+
+def clamp_input_limit(max_input_chars: int) -> int:
+    """Zaručí, že sa do promptu nikdy neposiela príliš dlhý text."""
+    if max_input_chars <= 0:
+        return ABSOLUTE_MAX_INPUT_CHARS
+    return min(max_input_chars, ABSOLUTE_MAX_INPUT_CHARS)
+
+
 def classify_text(client: OpenAI, model: str, system_prompt: str, user_template: str,
-                  text: str, max_tokens: int, temperature: float, timeout: int) -> Optional[dict]:
+                  text: str, max_input_chars: int, max_tokens: int, temperature: float, timeout: int) -> Optional[dict]:
     """
     Zavolá LLM a vrátí parsovaný JSON výsledek, nebo None při chybě.
     """
-    user_message = user_template.format(text=text)
+    prompt_text = prepare_text_for_prompt(text, clamp_input_limit(max_input_chars))
+    user_message = user_template.format(text=prompt_text)
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_message}
@@ -149,6 +182,8 @@ def main():
     parser.add_argument("--temperature", type=float, default=0.0, help="Teplota pro sampling")
     parser.add_argument("--timeout", type=int, default=60, help="Timeout pro API volání (s)")
     parser.add_argument("--retries", type=int, default=3, help="Počet opakování při chybě")
+    parser.add_argument("--max-input-chars", type=int, default=DEFAULT_MAX_INPUT_CHARS,
+                        help="Maximální délka vstupu do promptu po normalizaci (má tvrdý bezpečný strop)")
     parser.add_argument("--keep-text", action="store_true", help="Ponechat ve výstupu původní text")
     parser.add_argument("--max-rows", type=int, default=-1,
                         help="Maximální počet řádků ke zpracování (-1 znamená všechny, užitečné pro debugging)")
@@ -215,6 +250,7 @@ def main():
                 try:
                     result = classify_text(
                         client, args.model, system_prompt, user_template, text,
+                        args.max_input_chars,
                         args.max_tokens, args.temperature, args.timeout
                     )
                     if result is not None:

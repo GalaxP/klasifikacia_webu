@@ -4,8 +4,10 @@ Asynchronná klasifikácia webových stránok s opravou API Key a Batchingu.
 """
 
 import argparse
+import html
 import json
 import os
+import re
 import sys
 import asyncio
 import aiohttp
@@ -66,6 +68,11 @@ Content:
 Output exactly one JSON object in this format:
 {{"categories": ["CATEGORY1"], "note": "", "needs_human_review": false, "czech": true}}"""
 
+HTML_BLOCK_RE = re.compile(r"<(script|style|noscript)\b.*?</\1>", re.IGNORECASE | re.DOTALL)
+HTML_TAG_RE = re.compile(r"<[^>]+>")
+DEFAULT_MAX_INPUT_CHARS = 12000
+ABSOLUTE_MAX_INPUT_CHARS = 20000
+
 
 def parse_json_from_response(text: str) -> Optional[dict]:
     """Pokusí sa extrahovať a parsovať JSON z odpovede modelu."""
@@ -89,12 +96,38 @@ def parse_json_from_response(text: str) -> Optional[dict]:
     return None
 
 
+def prepare_text_for_prompt(text: str, max_chars: int) -> str:
+    """Zmenší HTML na čitelný text a ořízne ho na bezpečnú dĺžku."""
+    if not text:
+        return ""
+
+    cleaned = HTML_BLOCK_RE.sub(" ", text)
+    cleaned = HTML_TAG_RE.sub(" ", cleaned)
+    cleaned = html.unescape(cleaned)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+
+    if max_chars > 0 and len(cleaned) > max_chars:
+        head = max_chars * 4 // 5
+        tail = max_chars - head
+        cleaned = cleaned[:head].rstrip() + "\n...[TRUNCATED]...\n" + cleaned[-tail:].lstrip()
+
+    return cleaned
+
+
+def clamp_input_limit(max_input_chars: int) -> int:
+    """Zaručí, že sa do promptu nikdy neposiela príliš dlhý text."""
+    if max_input_chars <= 0:
+        return ABSOLUTE_MAX_INPUT_CHARS
+    return min(max_input_chars, ABSOLUTE_MAX_INPUT_CHARS)
+
+
 async def classify_single_task(
         session: aiohttp.ClientSession,
         model: str,
         system_prompt: str,
         user_template: str,
         text: str,
+        max_input_chars: int,
         max_tokens: int,
         temperature: float,
         timeout: int,
@@ -106,18 +139,6 @@ async def classify_single_task(
     """
     Asynchrónne zavolá LLM s retry logikou a API key.
     """
-    user_message = user_template.format(text=text)
-
-    payload = {
-        "model": model,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_message}
-        ],
-        "max_tokens": max_tokens,
-        "temperature": temperature,
-    }
-
     # --- OPRAVA: Správne nastavenie hlavičiek ---
     headers = {
         "Content-Type": "application/json"
@@ -128,8 +149,22 @@ async def classify_single_task(
         headers["Authorization"] = f"Bearer {api_key}"
     # -------------------------------------------
 
+    current_max_input_chars = clamp_input_limit(max_input_chars)
+
     for attempt in range(retries):
         try:
+            prompt_text = prepare_text_for_prompt(text, current_max_input_chars)
+            user_message = user_template.format(text=prompt_text)
+            payload = {
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_message}
+                ],
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+            }
+
             async with session.post(
                     f"{base_url}/chat/completions",
                     json=payload,
@@ -150,6 +185,13 @@ async def classify_single_task(
                     # Logovanie konkrétnej chyby pre debug
                     print(f"API Error {response.status} pre text (krátky): {text[:50]}... Chyba: {error_text}",
                           file=sys.stderr)
+
+                    if response.status == 400 and "context length" in error_text.lower():
+                        if current_max_input_chars > 4000 and attempt < retries - 1:
+                            current_max_input_chars = max(4000, current_max_input_chars // 2)
+                            print(f"Text je príliš dlhý, skúšam kratší vstup ({current_max_input_chars} znakov).",
+                                  file=sys.stderr)
+                            continue
 
                     if attempt == retries - 1:
                         return None
@@ -224,7 +266,7 @@ async def main_async(args):
             tasks_with_indices = []
 
             for idx, item in enumerate(batch):
-                text = item.get('text', '')
+                text = item.get('html', '')
                 url = item.get('url', 'unknown')
 
                 if not text:
@@ -247,6 +289,7 @@ async def main_async(args):
                     system_prompt=system_prompt,
                     user_template=user_template,
                     text=text,
+                    max_input_chars=args.max_input_chars,
                     max_tokens=args.max_tokens,
                     temperature=args.temperature,
                     timeout=args.timeout,
@@ -324,6 +367,8 @@ def main():
     parser.add_argument("--temperature", type=float, default=0.0, help="Teplota")
     parser.add_argument("--timeout", type=int, default=60, help="Timeout (s)")
     parser.add_argument("--retries", type=int, default=3, help="Počet opakovania")
+    parser.add_argument("--max-input-chars", type=int, default=DEFAULT_MAX_INPUT_CHARS,
+                        help="Maximálna dĺžka vstupu do promptu po normalizácii (má tvrdý bezpečný strop)")
     parser.add_argument("--keep-text", action="store_true", help="Ponechať text vo výstupe")
     parser.add_argument("--max-rows", type=int, default=-1, help="Limit riadkov (debug)")
     parser.add_argument("--batch-size", type=int, default=10, help="Veľkosť batchu (počet paralelných požiadavkov)")

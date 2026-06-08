@@ -2,3 +2,5 @@
 *.jsonl
 *.json
 *.csv
+
+src/__pycache__/
