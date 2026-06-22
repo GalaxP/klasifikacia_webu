@@ -20,7 +20,8 @@ dependencies = [
     "ipykernel (>=7.2.0,<8.0.0)",
     "pandas-stubs (>=3.0.3,<3.1.0)",
     "scipy-stubs (>=1.17.1,<1.18.0)",
-    "stanza (>=1.12.1,<2.0.0)"
+    "stanza (>=1.12.1,<2.0.0)",
+    "iterative-stratification (>=0.1.9,<0.2.0)"
 ]
 
 [tool.poetry]

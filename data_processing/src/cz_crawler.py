@@ -1,5 +1,6 @@
 ﻿import asyncio
 import json
+import os
 import sys
 from collections import deque
 from urllib.parse import urljoin, urlparse
@@ -9,10 +10,12 @@ from bs4 import BeautifulSoup
 from langdetect import LangDetectException, detect
 
 
-START_URL = "https://www.xnxx.com/"
-OUTPUT_FILE = "D:\czech_homepages_adult.jsonl"
-MAX_PAGES = 300
-DELAY_SECONDS = 2
+START_URL = "https://www.kadaza.cz/cestovani"
+OUTPUT_FILE = "D:\\thor_dataset\\crawler_recreation.jsonl"
+MAX_PAGES = 1000
+DELAY_SECONDS = 1
+MAX_CONCURRENCY = 10  # Maximální počet paralelních stránek
+EXTRACT_LINKS_ONLY_FROM_CZ = True
 
 
 def normalize_url(url):
@@ -101,31 +104,77 @@ async def scroll_page(page):
     await page.wait_for_timeout(1500)
 
 
-async def crawl_page(page, start_url, output_file, max_pages):
-    start_homepage = build_homepage_url(start_url) or start_url
-    start_domain = get_registered_domain(start_homepage)
+class ParallelCrawler:
+    """Paralelní crawler s omezením počtu současných požadavků."""
 
-    visited = set()
-    queue = deque([start_homepage])
-    seen_urls = {start_homepage}
-    seen_domains = {start_domain} if start_domain else set()
+    def __init__(self, context, output_file, max_pages, concurrency):
+        self.first = None
+        self.context = context
+        self.output_file = output_file
+        self.max_pages = max_pages
+        self.concurrency = concurrency
 
-    processed_count = 0
+        self.start_homepage = ""
+        self.visited = set()
+        self.queue = deque()
+        self.seen_urls = set()
+        self.seen_domains = set()
 
-    print(f"Spúšťam crawler na: {start_homepage}")
-    print(f"Cieľ: {max_pages} homepage stránok.")
-    print("-" * 40)
+        self.processed_count = 0
+        self.semaphore = None
+        self.state_lock = None
+        self.output_lock = None
 
-    with open(output_file, "w", encoding="utf-8") as f_out:
-        while queue and processed_count < max_pages:
-            current_url = queue.popleft()
+    async def init(self, start_url):
+        """Inicializace crawleru (musí být v async kontextu)."""
+        # Use the full input URL as the starting page
+        self.start_homepage = start_url
+        start_domain = get_registered_domain(self.start_homepage)
 
-            if current_url in visited:
-                continue
+        self.queue = deque([self.start_homepage])
+        self.seen_urls = {self.start_homepage}
+        self.seen_domains = {start_domain} if start_domain else set()
+        self.visited = set()
 
-            print(f"[{processed_count + 1}/{max_pages}] Navštevujem: {current_url}")
+        self.semaphore = asyncio.Semaphore(self.concurrency)
+        self.state_lock = asyncio.Lock()
+        self.output_lock = asyncio.Lock()
+        self.first = True
+
+        print(f"Spúšťam paralelný crawler na: {self.start_homepage}")
+        print(f"Cieľ: {self.max_pages} homepage stránok, konvergentnosť: {self.concurrency}")
+        print("-" * 40)
+
+        # Vytvoříme prázdný výstupní soubor
+        with open(self.output_file, "w", encoding="utf-8") as f:
+            pass
+
+    async def process_url(self, current_url):
+        """Zpracování jedné URL s vlastním page objektem."""
+        async with self.semaphore:
+            # Zkontrolujeme, zda už není zpracováno
+            async with self.state_lock:
+                if current_url in self.visited:
+                    return
+                self.visited.add(current_url)
+
+            async with self.state_lock:
+                count = self.processed_count
+
+            print(f"[{count + 1}/{self.max_pages}] Navštevujem: {current_url}")
+
+            # Vytvoříme nový page pro tuto URL
+            page = await self.context.new_page()
 
             try:
+                await page.add_init_script(
+                    """
+                    Object.defineProperty(navigator, 'webdriver', {
+                        get: () => undefined
+                    });
+                    """
+                )
+
                 await page.goto(
                     current_url,
                     wait_until="domcontentloaded",
@@ -138,49 +187,92 @@ async def crawl_page(page, start_url, output_file, max_pages):
                 soup = BeautifulSoup(html_content, "html.parser")
                 body_text = soup.get_text(separator=" ", strip=True)[:2000]
 
-                if is_czech(body_text) and is_homepage(current_url):
+                is_czech_page = is_czech(body_text) and is_homepage(current_url)
+                if self.first:
+                    is_czech_page = is_czech(body_text)
+                    self.first = False
+
+                if is_czech_page:
                     print("  -> Česká homepage. Ukladám...")
 
                     record = {"url": current_url, "html": html_content}
-                    f_out.write(json.dumps(record, ensure_ascii=False) + "\n")
-                    f_out.flush()
+                    async with self.output_lock:
+                        with open(self.output_file, "a", encoding="utf-8") as f_out:
+                            f_out.write(json.dumps(record, ensure_ascii=False) + "\n")
+                            f_out.flush()
+                            os.fsync(f_out.fileno())
 
-                    processed_count += 1
+                    async with self.state_lock:
+                        self.processed_count += 1
+
                 else:
                     print("  -> Nie je česká homepage. Preskakujem.")
 
-                visited.add(current_url)
+                # Extrahuje odkazy len ak je stránka česká (ak je zapnutý flag)
+                if EXTRACT_LINKS_ONLY_FROM_CZ and not is_czech_page:
+                    new_links = []
+                else:
+                    new_links = await get_links_from_html(html_content, current_url)
 
-                new_links = await get_links_from_html(html_content, current_url)
-                added_count = 0
+                added_urls = []
+                async with self.state_lock:
+                    for link in new_links:
+                        domain = get_registered_domain(link)
+                        homepage = build_homepage_url(link)
 
-                for link in new_links:
-                    domain = get_registered_domain(link)
-                    homepage = build_homepage_url(link)
+                        if not domain or not homepage:
+                            continue
 
-                    if not domain or not homepage:
-                        continue
+                        if domain in self.seen_domains:
+                            continue
 
-                    if domain in seen_domains:
-                        continue
+                        if homepage not in self.seen_urls:
+                            self.queue.append(homepage)
+                            self.seen_urls.add(homepage)
+                            self.seen_domains.add(domain)
+                            added_urls.append(homepage)
 
-                    if homepage not in seen_urls:
-                        queue.append(homepage)
-                        seen_urls.add(homepage)
-                        seen_domains.add(domain)
-                        added_count += 1
-
-                print(f"  -> Pridané {added_count} nových homepage domén.")
-                print(f"  -> Queue po spracovaní: {len(queue)}")
+                if added_urls:
+                    print(f"  -> Pridané {len(added_urls)} nových homepage domén.")
+                async with self.state_lock:
+                    print(f"  -> Queue po spracovaní: {len(self.queue)}")
 
             except Exception as e:
-                print(f"  -> Chyba: {e}")
+                print(f"  -> Chyba pri {current_url}: {e}")
 
-            await asyncio.sleep(DELAY_SECONDS)
+            finally:
+                await page.close()
 
-    print("-" * 40)
-    print(f"Dokončené! Celkovo uložených homepage: {processed_count}")
-    print(f"Výstup: {output_file}")
+            await asyncio.sleep(DELAY_SECONDS / self.concurrency)
+
+    async def run(self):
+        """Hlavní smyčka crawleru."""
+        while self.queue and self.processed_count < self.max_pages:
+            # Získáme batch z fronty
+            async with self.state_lock:
+                batch = []
+                while self.queue and len(batch) < self.concurrency:
+                    url = self.queue.popleft()
+                    if url not in self.visited:
+                        batch.append(url)
+
+            if not batch:
+                break
+
+            # Spustíme batch paralelně
+            tasks = [self.process_url(url) for url in batch]
+            await asyncio.gather(*tasks)
+
+        print("-" * 40)
+        print(f"Dokončené! Celkovo uložených homepage: {self.processed_count}")
+        print(f"Výstup: {self.output_file}")
+
+
+async def crawl_parallel(context, start_url, output_file, max_pages, concurrency):
+    """Wrapper pro spuštění paralelního crawleru."""
+    crawler = ParallelCrawler(context, output_file, max_pages, concurrency)
+    await crawler.init(start_url)
+    await crawler.run()
 
 
 async def main():
@@ -218,22 +310,13 @@ async def main():
             timezone_id="Europe/Prague",
         )
 
-        page = await context.new_page()
-
-        await page.add_init_script(
-            """
-            Object.defineProperty(navigator, 'webdriver', {
-                get: () => undefined
-            });
-            """
-        )
-
         try:
-            await crawl_page(
-                page=page,
+            await crawl_parallel(
+                context=context,
                 start_url=start_url,
                 output_file=OUTPUT_FILE,
                 max_pages=MAX_PAGES,
+                concurrency=MAX_CONCURRENCY,
             )
         finally:
             await context.close()

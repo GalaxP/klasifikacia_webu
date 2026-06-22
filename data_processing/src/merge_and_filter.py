@@ -68,6 +68,7 @@ def main():
     parser.add_argument('--key', '-k', type=str, default='url',
                         help='Kľúč pre hľadanie (napr. "url" alebo "domain_name").')
     parser.add_argument('--search-dir', type=str, default=None, help='Priečinok s ďalšími *.jsonl súbormi.')
+    parser.add_argument('--raw-html', action='store_true', help='Použi raw html namiesto compressed_html.')
 
     args = parser.parse_args()
 
@@ -141,19 +142,28 @@ def main():
             if original_annotation:
                 categories = original_annotation.get("categories", [])
 
-            # Extrakcia Base64 obsahu
-            raw_compressed = html_record.get("compressed_html")
-            clean_base64 = extract_base64_content(raw_compressed)
+            # Extrakcia obsahu (compressed_html alebo raw html)
+            if args.raw_html:
+                raw_content = html_record.get("html")
+                field_name = "html"
+                if isinstance(raw_content, str):
+                    content_value = raw_content
+                else:
+                    content_value = None
+            else:
+                raw_compressed = html_record.get("compressed_html")
+                content_value = extract_base64_content(raw_compressed)
+                field_name = "compressed_html"
 
-            if clean_base64:
+            if content_value:
                 output_record = {
                     "url": target_url,
-                    "compressed_html": clean_base64,
+                    field_name: content_value,
                     "categories": categories
                 }
                 output_records.append(output_record)
             else:
-                print(f"Upozornenie: Pre URL '{target_url}' nebola nájdená platná štruktúra compressed_html.")
+                print(f"Upozornenie: Pre URL '{target_url}' nebol nájdený platný {field_name}.")
         else:
             # Voliteľné: vypisovať nenájdené URL
             pass

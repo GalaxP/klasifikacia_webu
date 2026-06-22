@@ -70,7 +70,7 @@ Output exactly one JSON object in this format:
 
 HTML_BLOCK_RE = re.compile(r"<(script|style|noscript)\b.*?</\1>", re.IGNORECASE | re.DOTALL)
 HTML_TAG_RE = re.compile(r"<[^>]+>")
-DEFAULT_MAX_INPUT_CHARS = 12000
+DEFAULT_MAX_INPUT_CHARS = 15000
 ABSOLUTE_MAX_INPUT_CHARS = 20000
 
 
