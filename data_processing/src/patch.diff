@@ -1,0 +1,185 @@
+--- a/classify_with_llm.py
++++ b/classify_with_llm.py
+@@ -3,6 +3,8 @@
+ Asynchronná klasifikácia webových stránok s opravou API Key a Batchingu.
+ """
+ 
++import base64
++import gzip
+ import argparse
+ import html
+ import json
+@@ -104,6 +106,22 @@
+     return min(max_input_chars, ABSOLUTE_MAX_INPUT_CHARS)
+ 
+ 
++def gzip_b64_decompress(data: str) -> str:
++    """Dekóduje base64 + gzip text do UTF-8 reťazca."""
++    if not data:
++        return ""
++    raw = base64.b64decode(data)
++    return gzip.decompress(raw).decode("utf-8", errors="replace")
++
++
++def gzip_b64_compress(text: str) -> str:
++    """Zakóduje UTF-8 reťazec do gzip + base64."""
++    if text is None:
++        text = ""
++    raw = gzip.compress(text.encode("utf-8"))
++    return base64.b64encode(raw).decode("ascii")
++
++
+ async def classify_single_task(
+         session: aiohttp.ClientSession,
+         model: str,
+@@ -191,6 +209,8 @@
+         print("Chyba: base_url musí byť nastavené cez --base-url alebo OPENAI_BASE_URL.", file=sys.stderr)
+         sys.exit(1)
+ 
++    compressed_mode = args.compressed_jsonl
++
+     # Načítanie promptov
+     system_prompt = DEFAULT_SYSTEM_PROMPT
+     user_template = DEFAULT_USER_TEMPLATE
+@@ -210,10 +230,30 @@
+                     continue
+                 try:
+-                    items.append(json.loads(line))
++                    obj = json.loads(line)
+                 except json.JSONDecodeError:
+                     continue
++
++                if compressed_mode:
++                    url = obj.get("url", "unknown")
++                    compressed_html = obj.get("compressed_html", "")
++                    original_categories = obj.get("categories", [])
++
++                    try:
++                        decoded_html = gzip_b64_decompress(compressed_html)
++                    except Exception as e:
++                        print(
++                            f"Riadok {line_no}: nepodarilo sa dekódovať "
++                            f"compressed_html pre {url}: {e}",
++                            file=sys.stderr
++                        )
++                        decoded_html = ""
++
++                    items.append({
++                        "url": url,
++                        "category": original_categories,
++                        "html": decoded_html,
++                        "compressed_html": compressed_html
++                    })
++                else:
++                    items.append(obj)
+     except FileNotFoundError:
+         print(f"Súbor {args.input} nenájdený.")
+         return
+@@ -244,16 +284,25 @@
+                 url = item.get('url', 'unknown')
+ 
+                 if not text:
+-                    out = {
+-                        'url': url,
+-                        'original_category': item.get('category'),
+-                        'categories': [],
+-                        'note': 'NO_TEXT',
+-                        'needs_human_review': True,
+-                        'czech': False
+-                    }
+-                    if args.keep_text:
+-                        out['text'] = text
++                    if compressed_mode:
++                        out = {
++                            'url': url,
++                            'categories': [],
++                            'compressed_html': item.get(
++                                'compressed_html',
++                                gzip_b64_compress('')
++                            )
++                        }
++                    else:
++                        out = {
++                            'url': url,
++                            'original_category': item.get('category'),
++                            'categories': [],
++                            'note': 'NO_TEXT',
++                            'needs_human_review': True,
++                            'czech': False
++                        }
++                        if args.keep_text:
++                            out['text'] = text
+                     local_results[idx] = out
+                     continue
+ 
+@@ -286,24 +335,31 @@
+                 else:
+                     final_result = result
+ 
+-                out = {
+-                    'url': url,
+-                    'original_category': item.get('category'),
+-                }
+-                if args.keep_text:
+-                    out['text'] = item.get('text')
+-
+-                if final_result:
+-                    out['categories'] = final_result.get('categories', [])
+-                    out['note'] = final_result.get('note', '')
+-                    out['needs_human_review'] = final_result.get('needs_human_review', False)
+-                    out['czech'] = final_result.get('czech', False)
++                if compressed_mode:
++                    out = {
++                        'url': url,
++                        'categories': (
++                            final_result.get('categories', [])
++                            if final_result else []
++                        ),
++                        'compressed_html': item.get(
++                            'compressed_html',
++                            gzip_b64_compress(item.get('html', ''))
++                        )
++                    }
+                 else:
+-                    # Ak sa podarilo zistiť, že API vrátilo chybu (napr. 401), môžeme to napísať do note
+-                    note_msg = 'CLASSIFICATION_FAILED'
+-                    # Ak sme vedeli, že bola chyba autorizácie (môžeme to rozšíriť), môžeme písať viac info
+-                    out['categories'] = []
+-                    out['note'] = note_msg
+-                    out['needs_human_review'] = True
+-                    out['czech'] = False
++                    out = {
++                        'url': url,
++                        'original_category': item.get('category'),
++                    }
++                    if args.keep_text:
++                        out['text'] = item.get('text')
++
++                    if final_result:
++                        out['categories'] = final_result.get('categories', [])
++                        out['note'] = final_result.get('note', '')
++                        out['needs_human_review'] = final_result.get(
++                            'needs_human_review', False
++                        )
++                        out['czech'] = final_result.get('czech', False)
++                    else:
++                        out['categories'] = []
++                        out['note'] = 'CLASSIFICATION_FAILED'
++                        out['needs_human_review'] = True
++                        out['czech'] = False
+ 
+                 local_results[idx] = out
+ 
+@@ -336,6 +392,13 @@
+     parser.add_argument("--max-rows", type=int, default=-1, help="Limit riadkov (debug)")
+     parser.add_argument("--batch-size", type=int, default=10, help="Veľkosť batchu (počet paralelných požiadavkov)")
++    parser.add_argument(
++        "--compressed-jsonl",
++        action="store_true",
++        help=(
++            "Vstup aj výstup budú vo formáte: "
++            "url, categories, compressed_html (gzip + base64)"
++        )
++    )
+ 
+     args = parser.parse_args()
