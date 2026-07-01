@@ -31,7 +31,7 @@ Výstup musí byť validný JSON."""
 
 DEFAULT_USER_TEMPLATE = """Task: Classify the following web page content into applicable categories from the given list.  
 Allowed categories:  
-["Adult", "Computers", "Games", "Health", "News", "Recreation", "Reference", "Science", "Shopping", "Society", "Sports", "Others"]  
+["Adult", "Finance", "Computers", "Health", "Entertainment", "News", "Shopping", "Sports"]  
 
 Rules:  
 1. First determine whether the page contains Czech text.  
@@ -61,16 +61,20 @@ Rules:
 
 6. If there is enough substantive content, choose as few categories as possible.  
 
-7. The Adult category is only for pornographic/inappropriate content.  
+7. The Adult category is only for pornographic/inappropriate content.
 
 8. Output must be valid JSON with exactly these keys and no others:  
-   "categories", "note", "needs_human_review", "czech"  
+   "categories", "note", "needs_human_review", "czech" 
+
+9. Computers (Hardware/Software/Tech);  Entertainment (Games, Movies, Music, Arts excluding sports);  Finance(Banking, Investing, Economy, Business);
+Health (Medical info, Wellness); Shopping (E-commerce, Retail); Sports (Teams, Leagues, Athletes, sports, motorsports, ...);
+News(Current events, politics, weather, newspapers)
 
 Content:  
-{text}  
+{text}
 
 Output exactly one JSON object in this format:  
-{{"categories": ["CATEGORY1"], "note": "", "needs_human_review": false, "czech": true}}"""
+{{"categories": ["CATEGORY1", "CATEGORY2"], "note": "", "needs_human_review": false, "czech": true}}"""
 
 HTML_BLOCK_RE = re.compile(
     r"<(script|style|noscript)\b.*?</\1>", re.IGNORECASE | re.DOTALL
@@ -433,10 +437,11 @@ async def main_async(args):
 
                     local_results[idx] = out
 
-                    # --- NOVÉ: Zápis výsledkov tohto batchu do súboru ---
                 start_global_idx = batch_idx * batch_size
                 for local_idx, res in local_results.items():
                     global_idx = start_global_idx + local_idx
+                    if compressed_mode and len(res["categories"]) == 0:
+                        continue
                     try:
                         fout.write(json.dumps(res, ensure_ascii=False) + "\n")
                     except Exception as e:

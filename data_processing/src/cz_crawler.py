@@ -10,9 +10,9 @@ from bs4 import BeautifulSoup
 from langdetect import LangDetectException, detect
 
 
-START_URL = "https://www.kadaza.cz/cestovani"
-OUTPUT_FILE = "D:\\thor_dataset\\crawler_recreation.jsonl"
-MAX_PAGES = 1000
+START_URL = "https://www.kadaza.cz/sport"
+OUTPUT_FILE = "D:\\thor_dataset\\crawler_sports.jsonl"
+MAX_PAGES = 300
 DELAY_SECONDS = 1
 MAX_CONCURRENCY = 10  # Maximální počet paralelních stránek
 EXTRACT_LINKS_ONLY_FROM_CZ = True
