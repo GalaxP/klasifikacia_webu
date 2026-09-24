@@ -82,10 +82,10 @@ def main():
     print("\n1. Načítanie a filtrovanie anotácií...")
     annotations = load_jsonl(args.annotation_file)
 
-    # Kritériá: czech == True AND needs_human_review == False
+    # Kritériá: english == True AND needs_human_review == False and categories != []
     filtered_records = [
         r for r in annotations
-        if r.get("needs_human_review") is False and r.get("czech") is True
+        if r.get("needs_human_review") is False and r.get("english") is True and r.get("categories") is not None and len(r.get("categories", [])) > 0
     ]
 
     print(f"Nájdených {len(filtered_records)} záznamov na kontrolu.")

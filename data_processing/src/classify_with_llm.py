@@ -31,12 +31,12 @@ Výstup musí byť validný JSON."""
 
 DEFAULT_USER_TEMPLATE = """Task: Classify the following web page content into applicable categories from the given list.  
 Allowed categories:  
-["Adult", "Finance", "Computers", "Health", "Entertainment", "News", "Shopping", "Sports"]  
+["Adult", "Finance", "Computers", "Health", "Entertainment", "News", "Shopping", "Sports", "Food", "Travel", "Automotive"]  
 
 Rules:  
-1. First determine whether the page contains Czech text.  
-   - If the page is not in Czech, return:  
-     {{"categories": [], "note": "", "needs_human_review": false, "czech": false}}  
+1. First determine whether the page contains English text.  
+   - If the page is not in English, return:  
+     {{"categories": [], "note": "", "needs_human_review": false, "english": false}}  
 
 2. Before assigning any category, decide whether the the page contains enough substantive content to classify.  
    Substantive content means text that actually describes the topic, service, product, article, organization, or subject of the page.  
@@ -64,17 +64,17 @@ Rules:
 7. The Adult category is only for pornographic/inappropriate content.
 
 8. Output must be valid JSON with exactly these keys and no others:  
-   "categories", "note", "needs_human_review", "czech" 
+   "categories", "note", "needs_human_review", "english" 
 
-9. Computers (Hardware/Software/Tech);  Entertainment (Games, Movies, Music, Arts excluding sports);  Finance(Banking, Investing, Economy, Business);
-Health (Medical info, Wellness); Shopping (E-commerce, Retail); Sports (Teams, Leagues, Athletes, sports, motorsports, ...);
+9. Computers (Hardware/Software/Tech);  Entertainment (Games, Movies, Music, video games, Arts excluding sports);  Finance(Banking, Investing, Economy, Business);
+Health (Medical info, Wellness, Fitness, ...); Shopping (E-commerce, Retail, ...); Sports (Teams, Leagues, Athletes, sports, motorsports, ...);
 News(Current events, politics, weather, newspapers)
 
 Content:  
 {text}
 
 Output exactly one JSON object in this format:  
-{{"categories": ["CATEGORY1", "CATEGORY2"], "note": "", "needs_human_review": false, "czech": true}}"""
+{{"categories": ["CATEGORY1", "CATEGORY2"], "note": "", "needs_human_review": false, "english": true}}"""
 
 HTML_BLOCK_RE = re.compile(
     r"<(script|style|noscript)\b.*?</\1>", re.IGNORECASE | re.DOTALL
@@ -366,7 +366,7 @@ async def main_async(args):
                                 "categories": [],
                                 "note": "NO_TEXT",
                                 "needs_human_review": True,
-                                "czech": False,
+                                "english": False,
                             }
                             if args.keep_text:
                                 out["text"] = text
@@ -428,12 +428,12 @@ async def main_async(args):
                             out["needs_human_review"] = final_result.get(
                                 "needs_human_review", False
                             )
-                            out["czech"] = final_result.get("czech", False)
+                            out["english"] = final_result.get("english", False)
                         else:
                             out["categories"] = []
                             out["note"] = "CLASSIFICATION_FAILED"
                             out["needs_human_review"] = True
-                            out["czech"] = False
+                            out["english"] = False
 
                     local_results[idx] = out
 

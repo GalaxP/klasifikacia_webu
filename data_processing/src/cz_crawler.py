@@ -1,6 +1,5 @@
-﻿import asyncio
+import asyncio
 import json
-import os
 import sys
 from collections import deque
 from urllib.parse import urljoin, urlparse
@@ -8,15 +7,33 @@ from urllib.parse import urljoin, urlparse
 import tldextract
 from bs4 import BeautifulSoup
 from langdetect import LangDetectException, detect
+from playwright.async_api import Error as PlaywrightError
 
 
-START_URL = "https://www.kadaza.cz/sport"
-OUTPUT_FILE = "D:\\thor_dataset\\crawler_sports.jsonl"
-MAX_PAGES = 300
+START_URL = "https://www.firmy.cz/"
+OUTPUT_FILE = "D:\\thor_dataset\\crawler_firmy.jsonl"
+MAX_PAGES = 3000
 DELAY_SECONDS = 1
 MAX_CONCURRENCY = 10  # Maximální počet paralelních stránek
 EXTRACT_LINKS_ONLY_FROM_CZ = True
+OUTPUT_FLUSH_EVERY = 25
 
+# Domains to exclude from crawling
+BLACKLISTED_DOMAINS = [
+    'google.com',
+    'instagram.com',
+    'tiktok.com',
+    'twitter.com',
+    'instagram.com',
+    'facebook.com',
+    'youtube.com',
+    'x.com',
+    'soundcloud.com',
+    'seznam.cz'
+]
+
+# Also add your original blacklist pattern
+BLACKLIST_PATTERN = "google.com"
 
 def normalize_url(url):
     if not url:
@@ -42,8 +59,6 @@ def get_registered_domain(url):
     try:
         ext = tldextract.extract(url)
         if ext.domain and ext.suffix:
-            if ext.subdomain:
-                return f"{ext.subdomain}.{ext.domain}.{ext.suffix}".lower()
             return f"{ext.domain}.{ext.suffix}".lower()
         return ""
     except Exception:
@@ -97,15 +112,20 @@ async def get_links_from_html(html_content, base_url):
 
 
 async def scroll_page(page):
-    height = await page.evaluate("document.body.scrollHeight")
-    await page.evaluate(f"window.scrollTo(0, {height / 2})")
-    await page.wait_for_timeout(1000)
-    await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-    await page.wait_for_timeout(1500)
+    try:
+        height = await page.evaluate("document.body.scrollHeight")
+        await page.evaluate(f"window.scrollTo(0, {height / 2})")
+        await page.wait_for_timeout(1000)
+        await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        await page.wait_for_timeout(1500)
+    except PlaywrightError as e:
+        # Some pages trigger redirects/navigation during scroll JS evaluation.
+        # In that case we continue without scrolling instead of failing the URL worker.
+        if "Execution context was destroyed" not in str(e):
+            raise
 
 
 class ParallelCrawler:
-    """Paralelní crawler s omezením počtu současných požadavků."""
 
     def __init__(self, context, output_file, max_pages, concurrency):
         self.first = None
@@ -124,10 +144,10 @@ class ParallelCrawler:
         self.semaphore = None
         self.state_lock = None
         self.output_lock = None
+        self.output_handle = None
+        self.pending_output_flushes = 0
 
     async def init(self, start_url):
-        """Inicializace crawleru (musí být v async kontextu)."""
-        # Use the full input URL as the starting page
         self.start_homepage = start_url
         start_domain = get_registered_domain(self.start_homepage)
 
@@ -139,20 +159,16 @@ class ParallelCrawler:
         self.semaphore = asyncio.Semaphore(self.concurrency)
         self.state_lock = asyncio.Lock()
         self.output_lock = asyncio.Lock()
+        self.output_handle = open(self.output_file, "a", encoding="utf-8")
+        self.pending_output_flushes = 0
         self.first = True
 
         print(f"Spúšťam paralelný crawler na: {self.start_homepage}")
         print(f"Cieľ: {self.max_pages} homepage stránok, konvergentnosť: {self.concurrency}")
         print("-" * 40)
 
-        # Vytvoříme prázdný výstupní soubor
-        with open(self.output_file, "w", encoding="utf-8") as f:
-            pass
-
     async def process_url(self, current_url):
-        """Zpracování jedné URL s vlastním page objektem."""
         async with self.semaphore:
-            # Zkontrolujeme, zda už není zpracováno
             async with self.state_lock:
                 if current_url in self.visited:
                     return
@@ -163,7 +179,6 @@ class ParallelCrawler:
 
             print(f"[{count + 1}/{self.max_pages}] Navštevujem: {current_url}")
 
-            # Vytvoříme nový page pro tuto URL
             page = await self.context.new_page()
 
             try:
@@ -197,10 +212,11 @@ class ParallelCrawler:
 
                     record = {"url": current_url, "html": html_content}
                     async with self.output_lock:
-                        with open(self.output_file, "a", encoding="utf-8") as f_out:
-                            f_out.write(json.dumps(record, ensure_ascii=False) + "\n")
-                            f_out.flush()
-                            os.fsync(f_out.fileno())
+                        self.output_handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+                        self.pending_output_flushes += 1
+                        if self.pending_output_flushes >= OUTPUT_FLUSH_EVERY:
+                            self.output_handle.flush()
+                            self.pending_output_flushes = 0
 
                     async with self.state_lock:
                         self.processed_count += 1
@@ -208,7 +224,6 @@ class ParallelCrawler:
                 else:
                     print("  -> Nie je česká homepage. Preskakujem.")
 
-                # Extrahuje odkazy len ak je stránka česká (ak je zapnutý flag)
                 if EXTRACT_LINKS_ONLY_FROM_CZ and not is_czech_page:
                     new_links = []
                 else:
@@ -223,10 +238,13 @@ class ParallelCrawler:
                         if not domain or not homepage:
                             continue
 
-                        if domain in self.seen_domains:
+                        if domain in BLACKLISTED_DOMAINS:
                             continue
 
+                        if domain in self.seen_domains:
+                            continue
                         if homepage not in self.seen_urls:
+                            # Až teraz pridáme do fronty
                             self.queue.append(homepage)
                             self.seen_urls.add(homepage)
                             self.seen_domains.add(domain)
@@ -244,6 +262,16 @@ class ParallelCrawler:
                 await page.close()
 
             await asyncio.sleep(DELAY_SECONDS / self.concurrency)
+
+    async def close(self):
+        if self.output_handle is None:
+            return
+
+        async with self.output_lock:
+            self.output_handle.flush()
+            self.output_handle.close()
+            self.output_handle = None
+            self.pending_output_flushes = 0
 
     async def run(self):
         """Hlavní smyčka crawleru."""
@@ -270,9 +298,19 @@ class ParallelCrawler:
 
 async def crawl_parallel(context, start_url, output_file, max_pages, concurrency):
     """Wrapper pro spuštění paralelního crawleru."""
+
+    # Check if start URL should be processed
+    start_domain = get_registered_domain(start_url)
+    if start_domain in BLACKLISTED_DOMAINS:
+        print(f"URL {start_url} je na blacklistu - přeskočeno")
+        return
+
     crawler = ParallelCrawler(context, output_file, max_pages, concurrency)
     await crawler.init(start_url)
-    await crawler.run()
+    try:
+        await crawler.run()
+    finally:
+        await crawler.close()
 
 
 async def main():
@@ -321,7 +359,6 @@ async def main():
         finally:
             await context.close()
             await browser.close()
-
 
 if __name__ == "__main__":
     asyncio.run(main())
