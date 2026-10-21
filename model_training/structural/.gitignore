@@ -1,0 +1,7 @@
+# regenerable: `python -m structural.train prep` rebuilds it in ~1 min
+cache/
+# trained bundles come from one `train --save` command; repo convention
+# (model_training/.gitignore) keeps model binaries out of git as well
+models/
+*.log
+__pycache__/

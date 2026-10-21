@@ -1,3 +1,6 @@
 ﻿*.parquet
 model_output_cz_multilabel/*
 models/*
+
+15_07_1.jsonl
+27_08_01_en_cz.jsonl

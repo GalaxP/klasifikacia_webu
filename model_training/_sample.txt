@@ -1,0 +1,197 @@
+http://jv.gilead.org.il/virginia/eighty ['Travel']
+<html><head><title>Around the World in Eighty Days </title>
+</head><body><h1>Around the World in Eighty Days </h1>
+<h2>Verne, Jules</h2>
+<hr>
+<menu>
+<li><a href="head.html">Header</a>
+</li><li><a href="front.html">Front Matter</a>
+</li><li><a href="1.html">Chapter 1</a>
+IN WHICH PHILEAS FOGG AND PASSEPARTOUT ACCEPT  EACH OTHER, THE ONE AS MASTER, THE OTHER AS MAN
+</li><li><a href="2.html">Chapter 2</a>
+IN WHICH PASSEPARTOUT IS CONVINCED THAT HE HAS AT LAST FOUND HIS IDEAL
+</li><li><a href="3.html">Chapter 3</a>
+IN WHICH A CONVERSATION TAKES PLACE WHICH SEEMS LIKELY TO COST PHILEAS FOGG DEAR
+</li><li><a href="4.html">Chapter 4</a>
+IN WHICH PHILEAS FOGG ASTOUNDS PASSEPARTOUT, HIS SERVANT
+</li><li><a href="5.html">Chapter 5</a>
+IN WHICH A NEW SPECIES OF FUNDS, UNKNOWN TO THE MONEYED MEN, APPEARS ON 'CHANGE
+</li><li><a href="6.html">Chapter 6</a>
+IN WHICH FIX, THE DETECTIVE, BETRAYS A VERY NATURAL IMPATIENCE
+</li><li><a href="7.html">Chapter 7</a>
+WHICH ONCE MORE DEMONSTRATES THE USELESSNESS OF PASSPORTS AS AIDS TO DETECTIVES
+</li><li><a href="8.html">Chapter 8</a>
+IN WHICH PASSEPARTOUT TALKS RATHER MORE, PERHAPS, THAN IS PRUDENT
+</li><li><a href="9.html">Chapter 9</a>
+IN WHICH THE RED SEA AND THE INDIAN OCEAN PROVE PROPITIOUS TO THE DESIGNS OF PHILEAS FOGG
+</li><li><a href="10.html">Chapter 10</a>
+IN WHICH PASSEPARTOUT IS ONLY TOO GLAD TO GET OFF WITH THE LOSS OF HIS SHOES
+</li><li><a href="11.html">Chapter 11</a>
+IN WHICH PHILEAS FOGG SECURES A CURIOUS MEANS OF CONVEYANCE AT A FABULOUS PRICE
+</li><li><a href="12.html">Chapter 12</a>
+IN WHICH PHILEAS FOGG AND HIS COMPANIONS VENTURE ACROSS THE INDIAN FORESTS, AND WHAT ENSUED
+</li><li><a href="13.html">Chapter 13</a>
+IN WHICH PASSEPARTOUT RECEIVES A NEW PROOF THAT FORTUNE FAVORS THE BRAVE
+</li><li><a href="14.html">Chapter 14</a>
+IN WHICH PHILEAS FOGG DESCENDS THE WHOLE LENGTH OF THE BEAUTIFUL VALLEY OF THE GANGES WITHOUT EVER THINKING  OF SEEING IT
+</li><li><a href="15.html">Chapter 15</a>
+IN WHICH THE BAG OF BANKNOTES DISGORGES SOME THOUSANDS OF POUNDS MORE
+</li><li><a href="16.html">Chapter 16</a>
+IN WHICH FIX DOES NOT SEEM TO UNDERSTAND IN THE LEAST WHAT IS SAID TO HIM
+</li><li><a href="17.html">Chapter 17</a>
+SHOWING WHAT HAPPENED ON THE VOYAGE FROM SINGAPORE TO HONG KONG
+</li><li><a href="18.html">Chapter 18</a>
+IN WHICH PHILEAS FOGG, PASSEPARTOUT, AND FIX GO EACH ABOUT HIS BUSINESS
+</li><li><a href="19.html">Chapter 19</a>
+IN WHICH PASSEPARTOUT TAKES A TOO GREAT INTEREST IN HIS MASTER, AND WHAT COMES OF IT
+</li><li><a href="20.html">Chapter 20</a>
+IN WHICH FIX COMES FACE TO FACE WITH PHILEAS FOGG
+</li><li><a href="21.html">Section 21</a>
+ IN WHICH THE MASTER OF THE 'TANKADERE' RUNS GREAT RISK OF  LOSING A REWARD OF TWO HUNDRED POUNDS
+</li><li><a href="22.html">Section 22</a>
+"IN WHICH PASSEPARTOUT FINDS OUT THAT, EVEN AT THE ANTIPODES,  IT IS CONVENIENT TO HAVE SOME MONEY IN ONE'S POCKET" 
+</li><li><a href="23.html">Section 23</a>
+ IN WHICH PASSEPARTOUT'S NOSE BECOMES OUTRAGEOUSLY  LONG
+</li><li><a href="24.html">Section 24</a>
+ DURING WHICH MR. FOGG AND PARTY CROSS THE PACIFIC  OCEAN
+</li><li><a href="25.html">Section 25</a>
+ IN WHICH A SLIGHT GLIMPSE IS HAD OF SAN FRANCISCO
+</li><li><a href="26.html">Section 26</a>
+ IN WHICH PHILEAS FOGG AND PARTY TRAVEL BY THE PACIFIC  RAILROAD
+</li><li><a href="27.html">Section 27</a>
+ IN WHICH PASSEPARTOUT UNDERGOES, AT A SPEED OF TWENTY MILES  AN HOUR, A COURSE OF MORMON HISTORY
+</li><li><a href="28.html">Section 28</a>
+ IN WHICH PASSEPARTOUT DOES NOT SUCCEED IN MAKING ANYBODY  LISTEN TO REASON
+</li><li><a href="29.html">Section 29</a>
+ IN WHICH CERTAIN INCIDENTS ARE NARRATED WHICH ARE ONLY TO BE  MET WITH ON AMERICAN RAILROADS
+</li><li><a href="30.html">Section 30</a>
+ IN WHICH PHILEAS FOGG SIMPLY DOES HIS DUTY
+</li><li><a href="31.html">Section 31</a>
+ IN WHICH FIX, THE DETECTIVE, CONSIDERABLY FURTHERS THE  INTERESTS OF PHILEAS FOGG
+</li><li><a href="32.html">Section 32</a>
+ IN WHICH PHILEAS FOGG ENGAGES IN A DIRECT STRUGGLE WITH BAD
+
+##########
+
+http://www.teamworksmedia.com ['Entertainment']
+<!DOCTYPE html><html lang="en-US" class="no-vh-support"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1.0,shrink-to-fit=no">
+<link rel="profile" href="http://gmpg.org/xfn/11">
+<link rel="pingback" href="https://teamworksmedia.com/xmlrpc.php">
+<link rel="shortcut icon" href="https://teamworksmedia.com/wp-content/themes/twm/img/favicon.ico">
+
+<!-- Geo Meta Tags -->
+<meta name="geo.region" content="US-IL">
+<meta name="geo.placename" content="Chicago">
+<meta name="geo.position" content="41.883306;-87.651777">
+<meta name="ICBM" content="41.883306, -87.651777">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pure/0.5.0/pure-min.css">
+<!--[if lte IE 8]>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pure/0.5.0/grids-responsive-old-ie-min.css">
+<![endif]-->
+<!--[if gt IE 8]><!-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pure/0.5.0/grids-responsive-min.css">
+<!--<![endif]-->
+
+
+<script type="text/javascript" async="" src="https://ssl.google-analytics.com/ga.js"></script><script type="text/javascript">
+	var _gaq = _gaq || [];
+	_gaq.push(['_setAccount', 'UA-34995108-1']);
+	_gaq.push(['_trackPageview']);
+
+	(function() {
+	var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+	ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+	var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	})();
+</script>
+
+
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+
+	<!-- This site is optimized with the Yoast SEO plugin v20.11 - https://yoast.com/wordpress/plugins/seo/ -->
+	<title>TeamWorks Media: Solving business challenges with inspired brand stories</title>
+	<meta name="description" content="TeamWorks Media combines video production, digital storytelling and branded space to drive impact, engage audiences and meet the needs of business.">
+	<link rel="canonical" href="https://teamworksmedia.com/">
+	<meta property="og:locale" content="en_US">
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="TeamWorks Media: Solving business challenges with inspired brand stories">
+	<meta property="og:description" content="TeamWorks Media combines video production, digital storytelling and branded space to drive impact, engage audiences and meet the needs of business.">
+	<meta property="og:url" content="https://teamworksmedia.com/">
+	<meta property="og:site_name" content="TeamWorks Media">
+	<meta property="article:publisher" content="http://www.facebook.com/TeamWorksMedia">
+	<meta property="article:modified_time" content="2026-03-15T18:31:02+00:00">
+	<meta property="og:image" content="https://teamworksmedia.com/wp-content/uploads/2015/01/logo-lg.png">
+	<meta property="og:image:width" content="307">
+	<meta property="og:image:height" content="250">
+	<meta property="og:image:type" content="image/png">
+	<script type="application/ld+json" class="yoast-schema-graph">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://teamworksmedia.com/","url":"https://teamworksmedia.com/","name":"TeamWorks Media: Solving business challenges with inspired brand stories","isPartOf":{"@id":"https://teamworksmedia.com/#website"},"datePublished":"2014-12-18T14:35:12+00:00","dateModified":"2026-03-15T18:31:02+00:00","description":"TeamWorks Media combines video production, digital storytelling and branded space to drive impact, engage audiences and meet the needs of business.","breadcrumb":{"@id":"https://teamworksmedia.com/#breadcrumb"},"inLanguage":"en-US","potentialAction":[{"@type":"ReadAction","target":["https://teamworksmedia.com/"]}]},{"@type":"BreadcrumbList","@id":"https://teamworksmedia.com/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home"}]},{"@type":"WebSite","@id":"https://teamwo
+
+##########
+
+http://www.starwars.com/databank/character/jarjarbinks ['Entertainment']
+<!DOCTYPE html><html class="js canvas no-touch geolocation borderradius csstransitions fontface generatedcontent video audio localstorage svg svgclippaths no-multi_input no-mobile no-flash no-ios no-android no-kindle scrolling_text cssfilters cssgrid single-page-print" version="HTML+RDFa 1.1" lang="en" style=""><head prefix="fb: http://ogp.me/ns/fb# og: http://ogp.me/ns#" dir="ltr"><script src="//sb.scorecardresearch.com/cs/15354235/beacon.js"></script><script src="https://secure.espn.com/js/dcf/tags/vision/latest/vision-media.js"></script><script type="text/javascript" async="" src="https://dcf.espn.com/TWDC-DTCI/prod/code/c1ca389fc66de8a1e55681c5d13e92cc.js?conditionId0=4963500"></script><script type="text/javascript" async="" src="https://dcf.espn.com/TWDC-DTCI/prod/code/b57cb36f516a024b18497313429e4464.js?conditionId0=4968732"></script><script type="text/javascript" async="" src="https://dcf.espn.com/TWDC-DTCI/prod/code/fd7ca5e4c30173f0b8d03aed0a2c5ed2.js?conditionId0=4929445"></script><script type="text/javascript" async="" src="https://dcf.espn.com/TWDC-DTCI/prod/code/169c4ad035035618bd35818bd25ecec4.js?conditionId0=4929443"></script><script type="text/javascript" async="" src="https://dcf.espn.com/TWDC-DTCI/prod/code/ee00cbb1c51732236f4cb00852a1104f.js?conditionId0=4871166"></script>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="shortcut icon" href="https://lumiere-a.akamaihd.net/v1/images/sw-the-mandalorian-and-grogu-sw-favicon-512x512_cf5319d3.png?region=0%2C0%2C512%2C512">
+<link rel="apple-touch-icon" href="https://lumiere-a.akamaihd.net/v1/images/sw-the-mandalorian-and-grogu-sw-favicon-512x512_cf5319d3.png?region=0%2C0%2C512%2C512">
+<meta name="description" content="Visit the StarWars.com Databank and explore the life and legacy of Jar-Jar Binks with a character biography, pictures and videos.">
+  <style type="text/css">@font-face{font-family:'Matterhorn';src:url("https://static-mh.content.disney.io/matterhorn/assets/m4-7e766c2825c7.eot#") format("eot"),url("https://static-mh.content.disney.io/matterhorn/assets/m4-b366701d6945.woff") format("woff"),url("https://static-mh.content.disney.io/matterhorn/assets/m4-ac909dff444f.ttf") format("truetype"),url("https://static-mh.content.disney.io/matterhorn/assets/m4-3d636e3b4270.svg#Matterhorn") format("svg");font-weight:400;font-style:normal}
+</style><script type="text/javascript">document.cookie = 'country=us';</script>
+  <script type="text/javascript">this.__dataLayer={"page":{"page_id":"616b27cbd5661492a01ad05b","page_name":"us:starwars","page_title":"Jar Jar Binks | Star Wars Databank | StarWars.com","page_url":"www.starwars.com/databank/jar-jar-binks","platform":"web","slug":"databank/jar-jar-binks","story_id":"616b27cbd5661492a01ad05b","vendorFlags":{}},"site":{"baseDomain":"starwars.com","business_unit":"luc","business_unit_code":"","cms_version":"MH","language":["en"],"portal":"matterhorn","property_code":"sws","region":"us","country":"us","site":"www.starwars.com","cds":0,"otguid":"fbc43d0b-62f7-492e-bc92-f836e6b131ad","nsl":"2"},"privacy":{"cds":0}};</script>
+  <script type="text/javascript">this.OneTrust=this.OneTrust||{};try{(function(){var s=localStorage.getItem('consentToken');if(s){var d=JSON.parse(s);if(this.__dataLayer){this.__dataLayer.visitor=this.__dataLayer.visitor||{};this.__dataLayer.visitor.consent={identifier:d.id,identifierType:d.identifierType,token:d.token};}}}).call(this);}catch(e){}</script>
+  <script src="https://dcf.espn.com/TWDC-DTCI/prod/Bootstrap.js" type="text/javascript"></script>
+  <title>Jar Jar Binks | Star Wars Databank | StarWars.com</title>
+  <script src="https://static-mh.content.disney.io/matterhorn/assets/jquery-dc8b911876ec.js" type="text/javascript"></script>
+  <link rel="preconnect" href="//static-mh.content.disney.io">
+<link rel="preconnect" href="//lumiere-a.akamaihd.net">
+<link rel="preconnect" href="//kaltura.akamaized.net">
+<link rel="preconnect" href="//cdnapisec.kaltura.com">
+<link re
+
+##########
+
+http://www.aniar.com ['Shopping']
+<!DOCTYPE html><html lang="en"><head><meta http-equiv="origin-trial" content="A7vZI3v+Gz7JfuRolKNM4Aff6zaGuT7X0mf3wtoZTnKv6497cVMnhy03KDqX7kBz/q/iidW7srW31oQbBt4VhgoAAACUeyJvcmlnaW4iOiJodHRwczovL3d3dy5nb29nbGUuY29tOjQ0MyIsImZlYXR1cmUiOiJEaXNhYmxlVGhpcmRQYXJ0eVN0b3JhZ2VQYXJ0aXRpb25pbmczIiwiZXhwaXJ5IjoxNzU3OTgwODAwLCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlfQ==">
+<!-- Start cookieyes banner -->
+<script type="text/javascript" async="" charset="utf-8" src="https://www.gstatic.com/recaptcha/releases/xg_pWYS8-HRESiV6Rdg4aY_R/recaptcha__cs.js" crossorigin="anonymous" integrity="sha384-IkcXI0f4H78mywHOliNsfE7BmAJYBSBKkYZZ0+ZaeVDELZCoYIn8FyOeJumqiyfR"></script><script id="cookieyes" type="text/javascript" src="https://cdn-cookieyes.com/client_data/e71bc53f1cb88666d160c1e2/script.js"></script><script src="https://cdn-cookieyes.com/client_data/e71bc53f1cb88666d160c1e2/banner.js" async="" id="cookieyes-banner"></script>
+<!-- End cookieyes banner -->
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!-- Required meta tags -->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link rel="preconnect" href="https://www.google.com">
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin="">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+<link rel="stylesheet" href="https://static.hugedomains.com/css/hdv3-css/reboot.min.css">
+<link rel="stylesheet" href="https://static.hugedomains.com/css/hdv3-css/style.css?aa=2021-06-09a">
+<link rel="stylesheet" href="https://static.hugedomains.com/css/hdv3-css/responsive.css?aa=2021-06-09a">
+<link rel="stylesheet" href="https://static.hugedomains.com/css/hdv3-css/hd-style.css?aa=2022-10-33">
+<link rel="stylesheet" href="https://static.hugedomains.com/css/hdv3-css/hd-style-print.css">
+<meta name="theme-color" content="#4e73b7">
+<meta property="og:site_name" content="HugeDomains">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://static.hugedomains.com/images/hdv3-img/og_hugedomains.png">
+<title>Aniar.com is for sale | HugeDomains</title>
+<meta property="og:title" content="Aniar.com is for sale | HugeDomains">
+<meta property="og:url" content="https://www.HugeDomains.com/domain_profile.cfm?d=Aniar.com">
+<link rel="canonical" href="https://www.HugeDomains.com/domain_profile.cfm?d=Aniar.com">
+<meta property="og:description" content="Get this domain name before someone else does. Quick and painless shopping. Affordable payment options available.">
+<meta name="description" content="Get this domain name before someone else does. Quick and painless shopping. Affordable payment options available.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans:400,700&amp;display=swap">
+<link rel="stylesheet" href="https://use.typekit.net/zyw6mds.css">
+<!-- Global site tag (gtag.js) - Google Analytics -->
+
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+/* gtag('config', 'UA-7117339-4'); */
+gtag('config', 'UA-7117339-4', {
+'custom_map': {
+'dimension3': 'siteversion'
+}
+});
+gtag('event', 'pageLoad', { 'siteversion': 'HDv3' });
+</script>
+<style id="cky-style">.cky-hide{display:none}.cky-btn-revisit-wrapper{display:flex;align-items:center;justify-content:center;background:#0056a7;width:45px;height:45px;border-radius:50%;position:fixed;z-index:999999;cursor:pointer}.cky-revisit-bottom-left{bottom:15px;left:15px}.cky-revisit-bottom-right{bottom:15px;right:15px}.cky-btn-revisit-wrapper .cky-btn-revisit{display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;position:relative;margin:0;padding:0}.cky-btn-revisit-wrapper .cky-btn-revisit img{max-width:fit-content;margin:0;height:30px;width:30px}.cky-revisit-bottom-left:hover::before{content:attr(data-tooltip);position:absolute;background:#4e4b66;color:#fff;left:calc(100% + 7px
