@@ -32,13 +32,18 @@ class StructuralWebsiteClassifier:
     def fit(cls, ds, train_idx, val_idx, labels, groups=F.STRUCT_GROUPS,
             kind="logreg", C=4.0, min_df=4, max_df=0.75, max_features=200_000,
             use_numeric=True, objective="macro", verbose=True, binary_tf=False,
-            num_scale=0.5, score_norm="none",
-            force_one=True) -> "StructuralWebsiteClassifier":
+            num_scale=0.5, score_norm="none", force_one=True,
+            embed_model=None, embed_svd=128,
+            embed_scale=1.0) -> "StructuralWebsiteClassifier":
         from .model import binarize
+        from .embed import DEFAULT_MODEL, EMBED_GROUP
 
+        use_embed = EMBED_GROUP in tuple(groups)
         vec = Vectorizer(groups=list(groups), min_df=min_df, max_df=max_df,
                          max_features=max_features, use_numeric=use_numeric,
-                         binary_tf=binary_tf, num_scale=num_scale)
+                         binary_tf=binary_tf, num_scale=num_scale,
+                         embed_model=(embed_model or DEFAULT_MODEL) if use_embed else None,
+                         embed_svd=embed_svd, embed_scale=embed_scale)
         vec.fit(ds, train_idx)
         Xtr = vec.transform(ds, train_idx)
         Xva = vec.transform(ds, val_idx)
@@ -58,13 +63,19 @@ class StructuralWebsiteClassifier:
     def predict(self, raw_html: bytes | str, url: str = "", top_k: int | None = None,
                 min_prob: float = 0.0) -> list[tuple[str, float]]:
         raw = raw_html.encode("utf-8", "replace") if isinstance(raw_html, str) else raw_html
-        doc_groups = list(self.groups)
-        # `url` / `words` groups can only be used if they were fitted; extract accordingly
-        toks, stats = F.extract(raw, url or None, groups=tuple(doc_groups))
-        return self.predict_features(toks, stats, top_k=top_k, min_prob=min_prob)
+        # only the token groups this model was fitted on (`url`/`words` are optional,
+        # and `embed` is not an HTML token group)
+        toks, stats = F.extract(raw, url or None,
+                                groups=tuple(self.vectorizer.token_groups()))
+        emb = None
+        if self.vectorizer.uses_embed:
+            from .embed import embed_page        # imports torch, so only when needed
+            emb = embed_page(raw, self.vectorizer.embed_model)
+        return self.predict_features(toks, stats, top_k=top_k, min_prob=min_prob,
+                                     embed=emb)
 
-    def predict_features(self, toks, stats, top_k=None, min_prob=0.0):
-        X = self.vectorizer.transform_tokens(toks, stats)
+    def predict_features(self, toks, stats, top_k=None, min_prob=0.0, embed=None):
+        X = self.vectorizer.transform_tokens(toks, stats, embed=embed)
         s = norm_scores(_scores(self.model, X), self.score_norm)[0]
         order = np.argsort(-s)
         out = []

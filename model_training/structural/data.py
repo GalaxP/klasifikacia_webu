@@ -127,6 +127,9 @@ class Dataset:
     tokens: dict[str, tuple[np.ndarray, np.ndarray, np.ndarray]]  # keys, counts, indptr
     stats: np.ndarray                       # (n_docs, len(F._NUM_ORDER))
     num_names: list[str] = field(default_factory=lambda: list(F._NUM_ORDER))
+    #: optional (n_docs, dim) multilingual text embeddings -- see `embed.py`; not
+    #: pickled into the feature cache, it is attached from its own .npz on load
+    embeds: np.ndarray | None = None
 
     def __len__(self):
         return len(self.urls)
@@ -140,7 +143,10 @@ class Dataset:
 # --------------------------------------------------------------------------- #
 
 def load(path: str | Path, groups=F.STRUCT_GROUPS, n_docs: int | None = None,
-         workers: int | None = None, cache: bool = True, verbose: bool = True) -> Dataset:
+         workers: int | None = None, cache: bool = True, verbose: bool = True,
+         embed_model: str | None = None) -> Dataset:
+    """`embed_model` attaches the cached multilingual text vectors of that encoder to
+    `ds.embeds` and adds `embed` to `ds.groups`; no-op if they were never built."""
     path = Path(path)
     groups = tuple(groups)
     key = hashlib.md5(("|".join(sorted(groups)) + f"|{n_docs}|" + F.SCHEMA).encode()).hexdigest()[:8]
@@ -149,7 +155,10 @@ def load(path: str | Path, groups=F.STRUCT_GROUPS, n_docs: int | None = None,
         import joblib
         if verbose:
             print(f"[data] loading cached features {cache_file.name}")
-        return joblib.load(cache_file)
+        ds = joblib.load(cache_file)
+        if embed_model:
+            _attach_embeds(ds, path, n_docs, embed_model, verbose)
+        return ds
 
     import joblib
     workers = workers or max(1, (os.cpu_count() or 4) - 1)
@@ -184,10 +193,22 @@ def load(path: str | Path, groups=F.STRUCT_GROUPS, n_docs: int | None = None,
                  np.stack([r[6] for r in rows]) if rows else np.zeros((0, len(F._NUM_ORDER))))
     if cache:
         CACHE_DIR.mkdir(exist_ok=True)
-        joblib.dump(ds, cache_file, compress=1)
+        joblib.dump(ds, cache_file, compress=1)   # embeds stays None: separate .npz
         if verbose:
             print(f"[data] wrote cache {cache_file.name} ({cache_file.stat().st_size/1e6:.0f} MB)")
+    if embed_model:
+        _attach_embeds(ds, path, n_docs, embed_model, verbose)
     return ds
+
+
+def _attach_embeds(ds, path, n_docs, embed_model, verbose=True) -> None:
+    from . import embed as E
+    if E.attach(ds, path, n_docs=n_docs, model_name=embed_model, verbose=verbose):
+        if E.EMBED_GROUP not in ds.groups:
+            ds.groups.append(E.EMBED_GROUP)
+    elif verbose:
+        print(f"[data] no embedding cache for {embed_model} -- run "
+              f"`python -m structural.embed --data {path}`")
 
 
 def _iter_raw(path: Path, n_docs: int | None):

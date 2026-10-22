@@ -36,6 +36,7 @@ import numpy as np
 
 from . import data as D
 from . import features as F
+from .embed import DEFAULT_MODEL as EMBED_MODEL
 from .pipeline import StructuralWebsiteClassifier
 
 HERE = Path(__file__).resolve().parent
@@ -60,6 +61,11 @@ ABLATION = {
     "text_only":      ("words",),                      # language-dependent ceiling
     "text+struct":    F.STRUCT_GROUPS + ("words",),
     "url_tokens":     F.STRUCT_GROUPS + ("url",),
+    # needs `python -m structural.embed` first; skipped with a note if not built
+    "embed_only":     ("embed",),                      # content, no structure at all
+    "text+embed":     ("words", "embed"),
+    "struct+embed":   F.STRUCT_GROUPS + ("embed",),    # the combination to ship
+    "struct+text+embed": F.STRUCT_GROUPS + ("words", "embed"),
 }
 
 
@@ -116,7 +122,9 @@ def run_config(ds, name, cfg, labels, seed=0, verbose=True, fit_final=False):
               num_scale=cfg.get("num_scale", 0.5),
               score_norm=cfg.get("score_norm", "none"),
               force_one=cfg.get("force_one", True),
-              objective=cfg.get("threshold_objective", "macro"))
+              objective=cfg.get("threshold_objective", "macro"),
+              embed_svd=cfg.get("embed_svd", 128),
+              embed_scale=cfg.get("embed_scale", 1.0))
     res = {"name": name, "cfg": {**cfg, "groups": list(groups)}, "splits": {}}
     tr, va, te = domain_splits(ds, seed=seed)
     splits = {"domain": (tr, va, te), **lang_splits(ds, seed=seed)}
@@ -162,7 +170,8 @@ def combine(splits) -> float:
 
 def cmd_prep(a):
     t0 = time.time()
-    ds = D.load(a.data, groups=F.ALL_GROUPS, n_docs=a.n_docs, workers=a.workers)
+    ds = D.load(a.data, groups=F.ALL_GROUPS, n_docs=a.n_docs, workers=a.workers,
+                embed_model=a.embed)
     labels, counts = label_universe(ds)
     print(f"[prep] {len(ds)} docs in {time.time()-t0:.0f}s")
     print(f"[prep] languages: {dict((l, ds.langs.count(l)) for l in set(ds.langs))}")
@@ -174,6 +183,7 @@ def cmd_prep(a):
 def _configs(a):
     """What to evaluate: the ablation ladder, or a hyper-parameter grid."""
     groups = tuple(g for g in a.groups.split(",") if g)
+    knobs = {"embed_svd": a.embed_svd, "embed_scale": a.embed_scale}
     if a.sweep:
         grid = {"min_df": [int(x) for x in a.min_df.split(",")],
                 "max_df": [float(x) for x in a.max_df.split(",")],
@@ -184,6 +194,7 @@ def _configs(a):
             cfg = dict(zip(list(grid), combo))
             cfg["groups"] = groups
             cfg["model"] = a.model
+            cfg.update(knobs)
             name = (f"mdf{cfg['min_df']} xdf{cfg['max_df']} C{cfg['C']} "
                     f"{cfg['score_norm']} b{int(cfg['binary_tf'])}")
             yield name, cfg
@@ -198,11 +209,12 @@ def _configs(a):
                          "max_df": float(a.max_df.split(",")[0]),
                          "score_norm": a.score_norm.split(",")[0],
                          "binary_tf": a.binary.split(",")[0] == "1",
-                         "threshold_objective": a.threshold_objective}
+                         "threshold_objective": a.threshold_objective, **knobs}
 
 
 def cmd_train(a):
-    ds = D.load(a.data, groups=F.ALL_GROUPS, n_docs=a.n_docs, workers=a.workers)
+    ds = D.load(a.data, groups=F.ALL_GROUPS, n_docs=a.n_docs, workers=a.workers,
+                embed_model=a.embed)
     labels, counts = label_universe(ds, min_count=10)
     print(f"[train] {len(ds)} docs, {len(labels)} labels: {labels}", flush=True)
     results = []
@@ -338,6 +350,9 @@ def _urls_from(data, n):
 # --------------------------------------------------------------------------- #
 
 def main(argv=None):
+    # `explain` prints corpus tokens, which are not always cp1252-representable
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -346,6 +361,15 @@ def main(argv=None):
         p.add_argument("--data", default="../27_08_01_en_cz.jsonl")
         p.add_argument("--workers", type=int, default=None)
         p.add_argument("--n-docs", type=int, default=None)
+        p.add_argument("--embed", nargs="?", default=None, const=EMBED_MODEL,
+                       metavar="MODEL",
+                       help="add the multilingual text block (run "
+                            "`python -m structural.embed` first); MODEL overrides the "
+                            "default encoder")
+        p.add_argument("--embed-svd", type=int, default=128,
+                       help="SVD width of the text block (0 = raw dimensions)")
+        p.add_argument("--embed-scale", type=float, default=1.0,
+                       help="how loud the text block is against the tf-idf columns")
 
     p = sub.add_parser("prep")
     common(p)

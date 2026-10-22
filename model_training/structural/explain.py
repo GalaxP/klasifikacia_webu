@@ -73,16 +73,22 @@ def top_features(clf, label: str, k: int = 20,
     if not hasattr(clf.model, "estimators_"):
         raise TypeError("linear model required to read coefficients")
     w = np.asarray(clf.model.estimators_[j].coef_[0]).ravel()
-    n_tok = len(clf.vectorizer.vocab)
-    inv = {v: h for h, v in clf.vectorizer.vocab.items()}
+    vec = clf.vectorizer
+    n_tok = len(vec.vocab)
+    n_num = len(vec.num_names) if vec.use_numeric else 0
+    inv = {v: h for h, v in vec.vocab.items()}
     out = []
     for col in np.argsort(-w)[:k]:
         col = int(col)
         if col < n_tok:
             h = inv[col]
             name = strings.get(h, f"#{h:x}") if strings else f"#{h:x}"
+        elif col < n_tok + n_num:
+            name = "@" + vec.num_names[col - n_tok]
         else:
-            name = "@" + clf.vectorizer.num_names[col - n_tok]
+            # a component of the multilingual text block: no readable form, which is
+            # exactly what makes that signal language-agnostic
+            name = f"~embed{col - n_tok - n_num}"
         out.append((name, float(w[col])))
     return out
 
